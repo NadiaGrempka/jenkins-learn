@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.0</version>
+        <version>3.4.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>project</groupId>
@@ -44,8 +44,22 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
+<!--            <scope>test</scope>-->
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.junit.jupiter</groupId>-->
+<!--            <artifactId>junit-jupiter-engine</artifactId>-->
+<!--            <version>5.10.0</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.junit.platform</groupId>-->
+<!--            <artifactId>junit-platform-console-standalone</artifactId>-->
+<!--            <version>1.11.4</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>
@@ -75,45 +89,35 @@
                 </configuration>
             </plugin>
 
-            <!-- Add dependency plugin to copy dependencies into lib directory -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.8.1</version>
                 <executions>
-                    <!-- copy compile-scope dependencies before packaging -->
+                    <!-- kopiujemy dependencje przed pakowaniem -->
                     <execution>
                         <id>copy-dependencies</id>
                         <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
+                        <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.basedir}/lib</outputDirectory>
                             <includeScope>compile</includeScope>
                         </configuration>
                     </execution>
-
-                    <!-- copy test-scope dependencies before packaging -->
                     <execution>
                         <id>copy-test-dependencies</id>
                         <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
+                        <goals><goal>copy-dependencies</goal></goals>
                         <configuration>
                             <outputDirectory>${project.basedir}/lib</outputDirectory>
                             <includeScope>test</includeScope>
                         </configuration>
                     </execution>
-
-                    <!-- copy project JAR file during package phase -->
+                    <!-- kopiujemy własny JAR DOPIERO w fazie package -->
                     <execution>
                         <id>copy-project-jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
+                        <phase>package</phase>  <!-- <- zmieniona faza -->
+                        <goals><goal>copy</goal></goals>
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
@@ -131,5 +135,44 @@
 
         </plugins>
     </build>
+
+<!--    <profiles>-->
+<!--        <profile>-->
+<!--            <id>prepare-lib</id>-->
+<!--            <build>-->
+<!--                <plugins>-->
+<!--                    <plugin>-->
+<!--                        <groupId>org.apache.maven.plugins</groupId>-->
+<!--                        <artifactId>maven-dependency-plugin</artifactId>-->
+<!--                        <version>3.8.1</version>-->
+
+<!--                        <executions>-->
+<!--                            &lt;!&ndash; 1) Kopiuj wszystkie zależności runtime (to obejmuje też compile) &ndash;&gt;-->
+<!--                            <execution>-->
+<!--                                <id>copy-runtime-dependencies</id>-->
+<!--                                <phase>generate-sources</phase>-->
+<!--                                <goals><goal>copy-dependencies</goal></goals>-->
+<!--                                <configuration>-->
+<!--                                    <outputDirectory>${project.basedir}/lib</outputDirectory>-->
+<!--                                    <includeScope>runtime</includeScope>-->
+<!--                                </configuration>-->
+<!--                            </execution>-->
+
+<!--                            &lt;!&ndash; 2) Kopiuj zależności testowe &ndash;&gt;-->
+<!--                            <execution>-->
+<!--                                <id>copy-test-dependencies</id>-->
+<!--                                <phase>generate-sources</phase>-->
+<!--                                <goals><goal>copy-dependencies</goal></goals>-->
+<!--                                <configuration>-->
+<!--                                    <outputDirectory>${project.basedir}/lib</outputDirectory>-->
+<!--                                    <includeScope>test</includeScope>-->
+<!--                                </configuration>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
+<!--                </plugins>-->
+<!--            </build>-->
+<!--        </profile>-->
+<!--    </profiles>-->
 
 </project>
