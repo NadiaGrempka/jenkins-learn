@@ -37,55 +37,49 @@ pipeline {
 
 
         stage('Build') {
-            steps {
-                sh '''
-                  mkdir -p ${CLASS_DIR} ${TEST_DIR} ${REPORT_DIR}
-                  javac -cp "lib/*" -d ${CLASS_DIR} $(find src/main/java -name '*.java')
-                  javac -cp "lib/*:${CLASS_DIR}" -d ${TEST_DIR} $(find src/test/java -name '*.java')
-                '''
-            }
-            post {
-                success {
-                    stash includes: "${CLASS_DIR}/**,${TEST_DIR}/**,lib/**",
-                          name: 'classes-and-lib'
+        			steps {
+        				sh """
+                          mkdir -p ${CLASS_DIR} ${TEST_DIR} ${REPORT_DIR}
+                          javac -d ${CLASS_DIR} -cp "lib/*" \$(find src/main/java -name '*.java')
+                          javac -d ${TEST_DIR}  -cp "${CLASS_DIR}:lib/*" \$(find src/test/java  -name '*.java')
+                        """
+                        stash name: 'build-artifacts', includes: "${CLASS_DIR}/**/*.class,${TEST_DIR}/**/*.class,lib/**/*.jar"
+                    }
                 }
-            }
-        }
 
         stage('Test') {
-            steps {
-                unstash 'classes-and-lib'
-                script {
-                    try {
-                        sh '''
-                          java -jar lib/junit-platform-console-standalone-*.jar \\
-                            --class-path ${CLASS_DIR}:${TEST_DIR}:lib/* \\
-                            --scan-class-path \\
-                            --reports-dir=${REPORT_DIR} \\
-                            --report-format=xml
-                        '''
-                    } finally {
-                        junit "${REPORT_DIR}/*.xml"
+        			steps {
+        				unstash 'build-artifacts'
+                   sh 'echo "Zawartość lib:" && ls -l lib'
+                   script {
+        					try {
+        						sh """
+                         java -jar lib/junit-platform-console-standalone-*.jar \
+                           --class-path ${CLASS_DIR}:${TEST_DIR}:lib/* \
+                           --scan-class-path \
+                           --reports-dir=${REPORT_DIR}
+                       """
+                     } finally {
+        						junit testResults: "${REPORT_DIR}/**/*.xml", allowEmptyResults: true
+                     }
+                   }
+                 }
+               }
+
+        stage('Package') {
+        			when { branch 'master' }
+                    steps {
+        				sh "jar cf app-${BUILD_ID}.jar -C ${CLASS_DIR} ."
+                    }
+                }
+
+        stage('Archive') {
+        			when { branch 'master' }
+                    steps {
+        				archiveArtifacts artifacts: "app-${BUILD_ID}.jar,${REPORT_DIR}/**/*.xml", fingerprint: true
                     }
                 }
             }
-        }
-
-        stage('Package') {
-            when { branch 'main' }
-            steps {
-                sh "jar cf app-${env.BUILD_ID}.jar -C ${CLASS_DIR} ."
-            }
-        }
-
-        stage('Archive') {
-            when { branch 'main' }
-            steps {
-                archiveArtifacts artifacts: "app-${env.BUILD_ID}.jar, ${REPORT_DIR}/*.xml",
-                                 fingerprint: true
-            }
-        }
-    }
 
     post {
         always {
